@@ -1,4 +1,4 @@
-# SlidingLockButton
+# SlideLockButton
 
 ![image alt text](http://thirdgene.com/mmtools/mmslidingbutton/screens/example.gif)
 
@@ -6,11 +6,11 @@ Setup a slide to unlock button in storyboard.
 
 ## Installation
 
-Simply add the SlidingLockButton.swift file to your project.
+Simply add the SlideLockButton.swift file to your project.
 
 ## Usage
 
-Add a UIView to Storyboard, NOT a UIButton, and make its class a SlidingLockButton
+Add a UIView to Storyboard, NOT a UIButton, and make its class a SlideLockButton
 
 ![image alt text](http://thirdgene.com/mmtools/mmslidingbutton/screens/1.png)
 
