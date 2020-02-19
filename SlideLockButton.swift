@@ -10,13 +10,34 @@ import Foundation
 import UIKit
 
 protocol SlideLockButtonDelegate {
-    func buttonStatus(status: SlideLockButton.Status, sender: SlideLockButton)
+    func statusUpdated(status: SlideLockButton.Status, sender: SlideLockButton)
 }
 
 @IBDesignable class SlideLockButton: UIView {
     var delegate: SlideLockButtonDelegate?
 
-    @IBInspectable var dragPointWidth: CGFloat = 70 {
+    var dragPoint = UIView()
+    var buttonLabel = UILabel()
+    var dragPointButtonLabel = UILabel()
+    var imageView = UIImageView()
+    var unlocked = false
+    var layoutSet = false
+
+    @IBInspectable var buttonColor: UIColor = .gray {
+        didSet {
+            setStyle()
+        }
+    }
+
+    @IBInspectable var buttonUnlockedColor: UIColor = .black
+
+    @IBInspectable var buttonCornerRadius: CGFloat = 30 {
+        didSet {
+            setStyle()
+        }
+    }
+
+    @IBInspectable var dragPointWidth: CGFloat = 60 {
         didSet {
             setStyle()
         }
@@ -28,13 +49,7 @@ protocol SlideLockButtonDelegate {
         }
     }
 
-    @IBInspectable var buttonColor: UIColor = .gray {
-        didSet {
-            setStyle()
-        }
-    }
-
-    @IBInspectable var buttonText: String = "UNLOCK" {
+    @IBInspectable var dragPointTextColor: UIColor = .white {
         didSet {
             setStyle()
         }
@@ -46,29 +61,7 @@ protocol SlideLockButtonDelegate {
         }
     }
 
-    @IBInspectable var buttonTextColor: UIColor = .white {
-        didSet {
-            setStyle()
-        }
-    }
-
-    @IBInspectable var dragPointTextColor: UIColor = .white {
-        didSet {
-            setStyle()
-        }
-    }
-
-    @IBInspectable var buttonUnlockedTextColor: UIColor = .white {
-        didSet {
-            setStyle()
-        }
-    }
-
-    @IBInspectable var buttonCornerRadius: CGFloat = 30 {
-        didSet {
-            setStyle()
-        }
-    }
+    var buttonFont = UIFont(name: "Roboto-Light", size: 16.0)
 
     @IBInspectable var fontName: String = "Roboto-Light" {
         didSet {
@@ -82,16 +75,25 @@ protocol SlideLockButtonDelegate {
         }
     }
 
-    @IBInspectable var buttonUnlockedText: String = "UNLOCKED"
-    @IBInspectable var buttonUnlockedColor: UIColor = .black
-    var buttonFont = UIFont(name: "Roboto-Light", size: 16)
+    @IBInspectable var buttonText: String = NSLocalizedString("UNLOCK", comment: "") {
+        didSet {
+            setStyle()
+        }
+    }
 
-    var dragPoint = UIView()
-    var buttonLabel = UILabel()
-    var dragPointButtonLabel = UILabel()
-    var imageView = UIImageView()
-    var unlocked = false
-    var layoutSet = false
+    @IBInspectable var buttonTextColor: UIColor = .white {
+        didSet {
+            setStyle()
+        }
+    }
+
+    @IBInspectable var buttonUnlockedText: String = NSLocalizedString("UNLOCKED", comment: "")
+
+    @IBInspectable var buttonUnlockedTextColor: UIColor = .white {
+        didSet {
+            setStyle()
+        }
+    }
 
     override init (frame: CGRect) {
         super.init(frame: frame)
@@ -109,8 +111,8 @@ protocol SlideLockButtonDelegate {
     }
 
     func setStyle() {
-        self.buttonLabel.text = self.buttonText
-        self.dragPointButtonLabel.text = self.buttonText
+        self.buttonLabel.text = NSLocalizedString(self.buttonText, comment: "")
+        self.dragPointButtonLabel.text = NSLocalizedString(self.buttonText, comment: "")
         self.dragPoint.frame.size.width = self.dragPointWidth
         self.dragPoint.backgroundColor = self.dragPointColor
         self.backgroundColor = self.buttonColor
@@ -136,18 +138,18 @@ protocol SlideLockButtonDelegate {
 
         if !self.buttonText.isEmpty {
 
-            self.buttonLabel = UILabel(frame: CGRect(x: 0, y: 0, width: self.frame.size.width, height: self.frame.size.height))
+            self.buttonLabel = UILabel(frame: CGRect(x: self.dragPointWidth, y: 0, width: self.frame.size.width - self.dragPointWidth, height: self.frame.size.height))
             self.buttonLabel.textAlignment = .center
-            self.buttonLabel.text = buttonText
-            self.buttonLabel.textColor = UIColor.white
+            self.buttonLabel.text = NSLocalizedString(self.buttonText, comment: "")
+            self.buttonLabel.textColor = .white
             self.buttonLabel.font = self.buttonFont
             self.buttonLabel.textColor = self.buttonTextColor
             self.addSubview(self.buttonLabel)
 
             self.dragPointButtonLabel = UILabel(frame: CGRect(x: 0, y: 0, width: self.frame.size.width, height: self.frame.size.height))
             self.dragPointButtonLabel.textAlignment = .center
-            self.dragPointButtonLabel.text = buttonText
-            self.dragPointButtonLabel.textColor = UIColor.white
+            self.dragPointButtonLabel.text = NSLocalizedString(self.buttonText, comment: "")
+            self.dragPointButtonLabel.textColor = .white
             self.dragPointButtonLabel.font = self.buttonFont
             self.dragPointButtonLabel.textColor = self.dragPointTextColor
             self.dragPoint.addSubview(self.dragPointButtonLabel)
@@ -174,7 +176,6 @@ protocol SlideLockButtonDelegate {
         translatedPoint = CGPoint(x: translatedPoint.x, y: self.frame.size.height / 2)
         sender.view?.frame.origin.x = (dragPointWidth - self.frame.size.width) + translatedPoint.x
         if sender.state == .ended {
-
             let velocityX = sender.velocity(in: self).x * 0.2
             var finalX = translatedPoint.x + velocityX
             if finalX < 0 {
@@ -204,13 +205,13 @@ protocol SlideLockButtonDelegate {
     func unlock() {
         UIView.transition(with: self, duration: 0.2, options: .curveEaseOut, animations: {
             self.dragPoint.frame = CGRect(x: self.frame.size.width - self.dragPoint.frame.size.width, y: 0, width: self.dragPoint.frame.size.width, height: self.dragPoint.frame.size.height)
-        }) { (Status) in
-            if Status {
-                self.dragPointButtonLabel.text = self.buttonUnlockedText
+        }) { status in
+            if status {
+                self.dragPointButtonLabel.text = NSLocalizedString(self.buttonUnlockedText, comment: "")
                 self.imageView.isHidden = true
                 self.dragPoint.backgroundColor = self.buttonUnlockedColor
                 self.dragPointButtonLabel.textColor = self.buttonUnlockedTextColor
-                self.delegate?.buttonStatus(status: .Unlocked, sender: self)
+                self.delegate?.statusUpdated(status: .Unlocked, sender: self)
             }
         }
     }
@@ -219,14 +220,14 @@ protocol SlideLockButtonDelegate {
     func reset() {
         UIView.transition(with: self, duration: 0.2, options: .curveEaseOut, animations: {
             self.dragPoint.frame = CGRect(x: self.dragPointWidth - self.frame.size.width, y: 0, width: self.dragPoint.frame.size.width, height: self.dragPoint.frame.size.height)
-        }) { (Status) in
-            if Status {
-                self.dragPointButtonLabel.text = self.buttonText
+        }) { status in
+            if status {
+                self.dragPointButtonLabel.text = NSLocalizedString(self.buttonText, comment: "")
                 self.imageView.isHidden = false
                 self.dragPoint.backgroundColor = self.dragPointColor
                 self.dragPointButtonLabel.textColor = self.dragPointTextColor
                 self.unlocked = false
-                self.delegate?.buttonStatus(status: .Locked, sender: self)
+                self.delegate?.statusUpdated(status: .Locked, sender: self)
             }
         }
     }
