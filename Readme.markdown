@@ -16,7 +16,7 @@ Add a UIView to Storyboard, NOT a UIButton, and make its class a SlideLockButton
 
 Modify the values in Attributes Inspector to style the button.
 
-![image alt text](https://imgur.com/a/unX0Aaz)
+![image alt text](https://i.imgur.com/h6FiIpW.png)
 
 ## Example
 
