@@ -14,16 +14,23 @@ protocol SlideLockButtonDelegate {
 }
 
 @IBDesignable class SlideLockButton: UIView {
+    enum Status: String {
+        case Locked = "Locked"
+        case Unlocked = "Unlocked"
+        //case Sliding = "Sliding" //not fully tested
+    }
+
     var delegate: SlideLockButtonDelegate?
 
-    var dragPoint = UIView()
-    var buttonLabel = UILabel()
-    var dragPointButtonLabel = UILabel()
+    ///The View that slides. It is twice as big as the button's frame.
+    var dragView = UIView()
+    var mainLabel = UILabel()
+    var dragViewLabel = UILabel() //disable to not show any text while sliding
     var imageView = UIImageView()
     var unlocked = false
     var layoutSet = false
 
-    @IBInspectable var buttonColor: UIColor = .gray {
+    @IBInspectable var buttonLockedColor: UIColor = .gray {
         didSet {
             setStyle()
         }
@@ -37,33 +44,34 @@ protocol SlideLockButtonDelegate {
         }
     }
 
+    @IBInspectable var dragViewColor: UIColor = .darkGray {
+        didSet {
+            setStyle()
+        }
+    }
+
     @IBInspectable var dragPointWidth: CGFloat = 60 {
         didSet {
             setStyle()
         }
     }
 
-    @IBInspectable var dragPointColor: UIColor = .darkGray {
+    @IBInspectable var dragPointCornerRadius: CGFloat = 30 { //Set as half of dragPointWidth to round dragPoint to a circle
         didSet {
             setStyle()
         }
     }
 
-    @IBInspectable var dragPointTextColor: UIColor = .white {
+    @IBInspectable var dragPointImage: UIImage = UIImage() {
         didSet {
             setStyle()
         }
     }
 
-    @IBInspectable var imageName: UIImage = UIImage() {
-        didSet {
-            setStyle()
-        }
-    }
+    var buttonFont = UIFont.systemFont(ofSize: 16.0) //add aditional fonts if desired
 
-    var buttonFont = UIFont(name: "Roboto-Light", size: 16.0)
-
-    @IBInspectable var fontName: String = "Roboto-Light" {
+    //Use the .ttf, .otf, etc. filename. E.g. "Roboto-Light" if you added Roboto-Light.ttf
+    @IBInspectable var fontName: String = "" {
         didSet {
             setStyle()
         }
@@ -75,13 +83,25 @@ protocol SlideLockButtonDelegate {
         }
     }
 
-    @IBInspectable var buttonText: String = NSLocalizedString("UNLOCK", comment: "") {
+    @IBInspectable var buttonLockedText: String = NSLocalizedString("UNLOCK", comment: "") {
         didSet {
             setStyle()
         }
     }
 
-    @IBInspectable var buttonTextColor: UIColor = .white {
+    @IBInspectable var buttonLockedTextColor: UIColor = .white {
+        didSet {
+            setStyle()
+        }
+    }
+
+    @IBInspectable var dragViewText: String = NSLocalizedString("UNLOCKING", comment: "") {
+        didSet {
+            setStyle()
+        }
+    }
+
+    @IBInspectable var dragViewTextColor: UIColor = .white {
         didSet {
             setStyle()
         }
@@ -95,6 +115,8 @@ protocol SlideLockButtonDelegate {
         }
     }
 
+
+    //MARK: Inits
     override init (frame: CGRect) {
         super.init(frame: frame)
     }
@@ -110,130 +132,132 @@ protocol SlideLockButtonDelegate {
         }
     }
 
-    func setStyle() {
-        self.buttonLabel.text = NSLocalizedString(self.buttonText, comment: "")
-        self.dragPointButtonLabel.text = NSLocalizedString(self.buttonText, comment: "")
-        self.dragPoint.frame.size.width = self.dragPointWidth
-        self.dragPoint.backgroundColor = self.dragPointColor
-        self.backgroundColor = self.buttonColor
-        self.imageView.image = imageName
-        self.buttonLabel.textColor = self.buttonTextColor
-        self.dragPointButtonLabel.textColor = self.dragPointTextColor
 
-        self.dragPoint.layer.cornerRadius = buttonCornerRadius
+    //MARK: setStyle
+    func setStyle() {
+        self.mainLabel.text = NSLocalizedString(self.buttonLockedText, comment: "")
+        self.dragViewLabel.text = NSLocalizedString(self.dragViewText, comment: "")
+        self.dragView.frame.size.width = self.dragPointWidth
+        self.dragView.backgroundColor = self.dragViewColor
+        self.backgroundColor = self.buttonLockedColor
+        self.imageView.image = dragPointImage
+        self.mainLabel.textColor = self.buttonLockedTextColor
+        self.dragViewLabel.textColor = self.dragViewTextColor
+
+        self.dragView.layer.cornerRadius = dragPointCornerRadius
         self.layer.cornerRadius = buttonCornerRadius
 
-        guard let font = UIFont(name: self.fontName, size: self.fontSize) else { return }
-        self.buttonLabel.font = font
-        self.dragPointButtonLabel.font = font
+        self.mainLabel.font = UIFont(name: self.fontName, size: self.fontSize) ?? buttonFont
+        self.dragViewLabel.font = UIFont(name: self.fontName, size: self.fontSize) ?? buttonFont
     }
 
+
+    //MARK: setUpButton
     func setUpButton() {
-        self.backgroundColor = self.buttonColor
+        self.backgroundColor = self.buttonLockedColor
 
-        self.dragPoint = UIView(frame: CGRect(x: dragPointWidth - self.frame.size.width, y: 0, width: self.frame.size.width, height: self.frame.size.height))
-        self.dragPoint.backgroundColor = dragPointColor
-        self.dragPoint.layer.cornerRadius = buttonCornerRadius
-        self.addSubview(self.dragPoint)
+        self.dragView = UIView(frame: CGRect(x: dragPointWidth - self.frame.size.width * 2, y: 0, width: self.frame.size.width * 2, height: self.frame.size.height))
+        self.dragView.backgroundColor = dragViewColor
+        self.dragView.layer.cornerRadius = dragPointCornerRadius
+        self.addSubview(self.dragView)
 
-        if !self.buttonText.isEmpty {
+        //Labels
+        if !self.buttonLockedText.isEmpty {
+            self.mainLabel = UILabel(frame: CGRect(x: self.dragPointWidth, y: 0, width: self.frame.size.width - self.dragPointWidth, height: self.frame.size.height))
+            self.mainLabel.textAlignment = .center
+            self.mainLabel.text = NSLocalizedString(self.buttonLockedText, comment: "")
+            self.mainLabel.textColor = .white
+            self.mainLabel.font = self.buttonFont
+            self.mainLabel.textColor = self.buttonLockedTextColor
+            self.addSubview(self.mainLabel)
 
-            self.buttonLabel = UILabel(frame: CGRect(x: self.dragPointWidth, y: 0, width: self.frame.size.width - self.dragPointWidth, height: self.frame.size.height))
-            self.buttonLabel.textAlignment = .center
-            self.buttonLabel.text = NSLocalizedString(self.buttonText, comment: "")
-            self.buttonLabel.textColor = .white
-            self.buttonLabel.font = self.buttonFont
-            self.buttonLabel.textColor = self.buttonTextColor
-            self.addSubview(self.buttonLabel)
-
-            self.dragPointButtonLabel = UILabel(frame: CGRect(x: 0, y: 0, width: self.frame.size.width, height: self.frame.size.height))
-            self.dragPointButtonLabel.textAlignment = .center
-            self.dragPointButtonLabel.text = NSLocalizedString(self.buttonText, comment: "")
-            self.dragPointButtonLabel.textColor = .white
-            self.dragPointButtonLabel.font = self.buttonFont
-            self.dragPointButtonLabel.textColor = self.dragPointTextColor
-            self.dragPoint.addSubview(self.dragPointButtonLabel)
+            self.dragViewLabel = UILabel(frame: CGRect(x: self.frame.size.width, y: 0, width: self.frame.size.width, height: self.frame.size.height))
+            self.dragViewLabel.textAlignment = .center
+            self.dragViewLabel.text = NSLocalizedString(self.dragViewText, comment: "")
+            self.dragViewLabel.textColor = .white
+            self.dragViewLabel.font = self.buttonFont
+            self.dragViewLabel.textColor = self.dragViewTextColor
+            self.dragView.addSubview(self.dragViewLabel)
         }
-        self.bringSubviewToFront(self.dragPoint)
+        self.bringSubviewToFront(self.dragView)
 
-        if self.imageName != UIImage() {
-            self.imageView = UIImageView(frame: CGRect(x: self.frame.size.width - dragPointWidth, y: 0, width: self.dragPointWidth, height: self.frame.size.height))
+        //Image
+        if self.dragPointImage != UIImage() { //user chose a custom image to display on top of the slider
+            self.imageView = UIImageView(frame: CGRect(x: self.frame.size.width * 2 - dragPointWidth, y: 0, width: self.dragPointWidth, height: self.frame.size.height))
             self.imageView.contentMode = .center
-            self.imageView.image = self.imageName
-            self.dragPoint.addSubview(self.imageView)
+            self.imageView.image = self.dragPointImage
+            self.dragView.addSubview(self.imageView)
         }
 
         self.layer.masksToBounds = true
 
-        // start detecting pan gesture
+        // Pan gesture recognition
         let panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(self.panDetected(sender:)))
         panGestureRecognizer.minimumNumberOfTouches = 1
-        self.dragPoint.addGestureRecognizer(panGestureRecognizer)
+        self.dragView.addGestureRecognizer(panGestureRecognizer)
     }
 
+    //MARK: panDetected
     @objc func panDetected(sender: UIPanGestureRecognizer) {
+        //Call delegate?.statusUpdated(status: .Sliding, sender: self) if desired
         var translatedPoint = sender.translation(in: self)
         translatedPoint = CGPoint(x: translatedPoint.x, y: self.frame.size.height / 2)
-        sender.view?.frame.origin.x = (dragPointWidth - self.frame.size.width) + translatedPoint.x
+        sender.view?.frame.origin.x = (dragPointWidth - self.frame.size.width * 2) + translatedPoint.x
         if sender.state == .ended {
             let velocityX = sender.velocity(in: self).x * 0.2
             var finalX = translatedPoint.x + velocityX
-            if finalX < 0 {
-                finalX = 0
-            } else if finalX + self.dragPointWidth > (self.frame.size.width - 60) {
-                unlocked = true
+            finalX = max(finalX, 0) //avoiding negative values
+            if finalX + self.dragPointWidth > (self.frame.size.width - dragPointWidth / 2) {
+                self.unlocked = true
                 self.unlock()
             }
 
             let animationDuration: Double = abs(Double(velocityX) * 0.0002) + 0.2
             UIView.transition(with: self, duration: animationDuration, options: .curveEaseOut, animations: {
-            }, completion: { (Status) in
-                    if Status {
+            }, completion: { status in
+                    if status {
                         self.animationFinished()
                     }
                 })
         }
     }
 
+    //MARK: Animations
     func animationFinished() {
         if !unlocked {
             self.reset()
         }
     }
 
-    ///Unlock button animation (SUCCESS)
+    ///Unlock animation, when the slider reaches the end of the button
     func unlock() {
         UIView.transition(with: self, duration: 0.2, options: .curveEaseOut, animations: {
-            self.dragPoint.frame = CGRect(x: self.frame.size.width - self.dragPoint.frame.size.width, y: 0, width: self.dragPoint.frame.size.width, height: self.dragPoint.frame.size.height)
+            self.dragView.frame = CGRect(x: self.frame.size.width - self.dragView.frame.size.width, y: 0, width: self.dragView.frame.size.width, height: self.dragView.frame.size.height)
         }) { status in
             if status {
-                self.dragPointButtonLabel.text = NSLocalizedString(self.buttonUnlockedText, comment: "")
+                self.dragView.backgroundColor = self.buttonUnlockedColor
                 self.imageView.isHidden = true
-                self.dragPoint.backgroundColor = self.buttonUnlockedColor
-                self.dragPointButtonLabel.textColor = self.buttonUnlockedTextColor
+                self.dragViewLabel.text = NSLocalizedString(self.buttonUnlockedText, comment: "")
+                self.dragViewLabel.textColor = self.buttonUnlockedTextColor
                 self.delegate?.statusUpdated(status: .Unlocked, sender: self)
             }
         }
     }
 
-    ///Resets the button's animation (RESET)
+    ///Resets the button
     func reset() {
         UIView.transition(with: self, duration: 0.2, options: .curveEaseOut, animations: {
-            self.dragPoint.frame = CGRect(x: self.dragPointWidth - self.frame.size.width, y: 0, width: self.dragPoint.frame.size.width, height: self.dragPoint.frame.size.height)
+            self.dragView.frame = CGRect(x: self.dragPointWidth - self.frame.size.width * 2, y: 0, width: self.dragView.frame.size.width, height: self.dragView.frame.size.height)
         }) { status in
             if status {
-                self.dragPointButtonLabel.text = NSLocalizedString(self.buttonText, comment: "")
+                self.dragView.backgroundColor = self.dragViewColor
                 self.imageView.isHidden = false
-                self.dragPoint.backgroundColor = self.dragPointColor
-                self.dragPointButtonLabel.textColor = self.dragPointTextColor
+                self.dragViewLabel.text = NSLocalizedString(self.dragViewText, comment: "")
+                self.dragViewLabel.textColor = self.dragViewTextColor
                 self.unlocked = false
                 self.delegate?.statusUpdated(status: .Locked, sender: self)
             }
         }
     }
 
-    enum Status: String {
-        case Locked = "Locked"
-        case Unlocked = "Unlocked"
-    }
 }
