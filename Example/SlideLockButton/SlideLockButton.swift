@@ -109,11 +109,7 @@ protocol SlideLockButtonDelegate {
 
     @IBInspectable var buttonUnlockedText: String = NSLocalizedString("UNLOCKED", comment: "")
 
-    @IBInspectable var buttonUnlockedTextColor: UIColor = .white {
-        didSet {
-            setStyle()
-        }
-    }
+    @IBInspectable var buttonUnlockedTextColor: UIColor = .white
 
 
     //MARK: Inits
