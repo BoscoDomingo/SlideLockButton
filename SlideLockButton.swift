@@ -73,13 +73,13 @@ protocol SlideLockButtonDelegate {
     //Use the .ttf, .otf, etc. filename. E.g. "Roboto-Light" if you added Roboto-Light.ttf
     @IBInspectable var fontName: String = "" {
         didSet {
-            setStyle()
+            setFont()
         }
     }
 
     @IBInspectable var fontSize: CGFloat = 16.0 {
         didSet {
-            setStyle()
+            setFont()
         }
     }
 
@@ -146,11 +146,14 @@ protocol SlideLockButtonDelegate {
 
         self.dragView.layer.cornerRadius = dragPointCornerRadius
         self.layer.cornerRadius = buttonCornerRadius
-
-        self.mainLabel.font = UIFont(name: self.fontName, size: self.fontSize) ?? buttonFont
-        self.dragViewLabel.font = UIFont(name: self.fontName, size: self.fontSize) ?? buttonFont
     }
 
+    func setFont(){
+        guard let font = UIFont(name: self.fontName, size: self.fontSize) else { return }
+        self.buttonFont = font
+        self.mainLabel.font = font
+        self.dragViewLabel.font = font
+    }
 
     //MARK: setUpButton
     func setUpButton() {
