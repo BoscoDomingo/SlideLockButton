@@ -9,6 +9,8 @@
 import UIKit
 
 class ViewController: UIViewController, SlideLockButtonDelegate {
+
+    
     @IBOutlet weak var slideButton: SlideLockButton!
     
     @IBAction func resetPressed(_ sender: UIButton) {
@@ -21,7 +23,7 @@ class ViewController: UIViewController, SlideLockButtonDelegate {
     }
     
     //Delegate method
-    func buttonStatus(status: SlideLockButton.Status, sender: SlideLockButton) {
+    func statusUpdated(status: SlideLockButton.Status, sender: SlideLockButton) {
         print(status.rawValue)
     }
 }
