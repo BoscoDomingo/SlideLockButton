@@ -1,6 +1,6 @@
 # SlideLockButton
 
-![image alt text](http://thirdgene.com/mmtools/mmslidingbutton/screens/example.gif)
+![There used to be a GIF here, original owner took it down](http://thirdgene.com/mmtools/mmslidingbutton/screens/example.gif)
 
 Setup a slide to unlock button in storyboard.
 
@@ -12,11 +12,11 @@ Simply add the SlideLockButton.swift file to your project.
 
 Add a UIView to Storyboard, NOT a UIButton, and make its class a SlideLockButton
 
-![image alt text](http://thirdgene.com/mmtools/mmslidingbutton/screens/1.png)
+![There used to be a PNG here, original owner took it down](http://thirdgene.com/mmtools/mmslidingbutton/screens/1.png)
 
 Modify the values in Attributes Inspector to style the button.
 
-![image alt text](https://i.imgur.com/h6FiIpW.png)
+![Modify values](https://i.imgur.com/h6FiIpW.png)
 
 ## Example
 
